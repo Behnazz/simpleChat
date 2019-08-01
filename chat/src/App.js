@@ -4,54 +4,74 @@ import './App.css';
 
 class App extends Component {
   state = {
-    message: ' ',
-    name: ' ',
-    error: ' '
+    messageInput: ' ',
+    nameInput: ' ',
+    error: ' ',
+    messageOutput: []
   };
 
-  handleName = e => {
+  async componentWillMount() {
+    this.getDataOfMessage();
+  }
+
+  getDataOfMessage = async () => {
+    try {
+      const messageOutput = await axios.get('api/message');
+
+      this.setState({
+        messageOutput: messageOutput.data
+      });
+    } catch (error) {
+      this.setState({
+        error
+      });
+    }
+  };
+
+  handleNameInput = e => {
     this.setState({
-      name: e.target.value
+      nameInput: e.target.value
     });
   };
 
-  handleMessage = e => {
+  handleMessageInput = e => {
     this.setState({
-      message: e.target.value
+      messageInput: e.target.value
     });
   };
 
   handleSubmit = async e => {
     e.preventDefault();
-    const { message, name } = this.state;
+    const { messageInput, nameInput } = this.state;
 
-    if (message === '' || name === '') {
+    if (messageInput === '' || nameInput === '') {
       this.setState({
         error: 'You forgot to write your name or message'
       });
     } else {
       const body = {
-        message: message,
-        name: name
+        messageInput,
+        nameInput
       };
       try {
-        await axios.post('http://localhost:4000/api/message', body);
+        await axios.post('api/message', body);
+        this.getDataOfMessage();
       } catch (error) {
         this.setState({
           error
         });
       }
       this.setState({
-        message: '',
-        name: '',
+        messageInput: '',
+        nameInput: '',
         error: ''
       });
     }
   };
 
   render() {
-    const { message, name, error } = this.state;
-    console.log({ message, name, error });
+    const { messageInput, nameInput, error } = this.state;
+
     return (
       <div className='container'>
         <div className=' jumbotron'>
@@ -60,9 +80,9 @@ class App extends Component {
             <input
               className='form-control'
               placeholder='Name'
-              value={name}
+              value={nameInput}
               type='text'
-              onChange={this.handleName}
+              onChange={this.handleNameInput}
             />
           </div>
           <br />
@@ -72,8 +92,8 @@ class App extends Component {
               className='form-control'
               placeholder='Your Message Here'
               type='text'
-              value={message}
-              onChange={this.handleMessage}
+              value={messageInput}
+              onChange={this.handleMessageInput}
             />
           </div>
           <br />
@@ -86,6 +106,13 @@ class App extends Component {
               Send
             </button>
           </div>
+        </div>
+        <div>
+          {this.state.messageOutput.map(message => (
+            <ul key={message.id}>
+              {message.nameInput}:{message.messageInput}
+            </ul>
+          ))}
         </div>
       </div>
     );
